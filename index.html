@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Desafio Isaac Newton — Gincana do Conhecimento</title>
+<style>
+/* ===== PALETA E TIPOGRAFIA ===== */
+:root{
+  --preto:#100E0B; --marrom:#21180F; --ouro:#D4AF65; --bege:#E8D8B5; --branco:#F5F0E6;
+  --ok:#3FA66B; --ok-bg:rgba(63,166,107,.16); --err:#D6584F; --err-bg:rgba(214,88,79,.16);
+  --serif:'Palatino Linotype','Book Antiqua',Palatino,'Iowan Old Style',Georgia,serif;
+  --sans:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
+  --line:rgba(232,216,181,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;overflow-x:hidden}
+body{font-family:var(--serif);color:var(--branco);background:var(--preto);min-height:100vh;display:flex;flex-direction:column}
+button{font-family:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--ouro);outline-offset:3px}
+.i{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ===== FUNDO: imagens de Newton bem suaves ===== */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 20% 0%,#2a1d10,var(--preto) 60%)}
+.bg img{position:absolute;object-fit:cover;filter:grayscale(1) contrast(1.1) brightness(.7);opacity:.07}
+.bg .a{left:-6%;top:6%;width:42%;height:70%;-webkit-mask-image:linear-gradient(90deg,#000 30%,transparent);mask-image:linear-gradient(90deg,#000 30%,transparent)}
+.bg .b{right:-4%;top:0;width:44%;height:100%;opacity:.09;-webkit-mask-image:linear-gradient(270deg,#000 30%,transparent);mask-image:linear-gradient(270deg,#000 30%,transparent)}
+.bg .c{left:30%;bottom:-8%;width:36%;height:46%;opacity:.05;-webkit-mask-image:linear-gradient(0deg,#000 20%,transparent);mask-image:linear-gradient(0deg,#000 20%,transparent)}
+#stars{position:fixed;inset:0;z-index:1;pointer-events:none}
+.formula{position:fixed;z-index:1;pointer-events:none;font-style:italic;color:var(--bege);opacity:.1}
+.formula.f1{left:5%;bottom:10%;font-size:1.3rem}
+.formula.f2{right:6%;top:16%;font-size:1.2rem}
+
+/* ===== BARRA SUPERIOR ===== */
+.top{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top,0px)) 22px 0;font-family:var(--sans);font-size:.85rem;color:var(--bege)}
+.brand{display:flex;align-items:center;gap:10px;letter-spacing:.04em}
+.brand .i{font-size:22px;color:var(--ouro)}
+.sound{display:flex;align-items:center;gap:8px;background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--branco);font-size:.82rem;transition:.2s}
+.sound:hover{border-color:var(--branco)}
+.sound .i{font-size:18px}
+
+/* ===== ESTRUTURA ===== */
+main{position:relative;z-index:5;flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+.screen{display:none;width:100%}
+.screen.active{display:block;animation:enter .6s cubic-bezier(.2,.7,.2,1)}
+@keyframes enter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.panel{max-width:980px;margin:0 auto}
+.card{max-width:720px;margin:0 auto;padding:34px;border-radius:20px;background:rgba(33,24,15,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);box-shadow:0 30px 70px rgba(0,0,0,.5)}
+
+/* ===== INÍCIO ===== */
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.seal{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border:1px solid rgba(212,175,101,.55);border-radius:999px;color:var(--ouro);font-family:var(--sans);font-size:.74rem;letter-spacing:.16em}
+.seal .i{font-size:16px}
+h1{margin:22px 0 16px;font-size:clamp(2.4rem,6.4vw,4.4rem);line-height:1;font-weight:700;letter-spacing:.01em;color:var(--branco)}
+h1 span{display:block;color:var(--ouro)}
+.sub{font-size:1.25rem;line-height:1.45;color:var(--bege);max-width:30ch}
+.lead{margin-top:14px;color:rgba(245,240,230,.65);line-height:1.65;max-width:42ch}
+.hero .btn{margin-top:30px}
+.frame{position:relative;margin:0 auto;width:min(100%,320px);aspect-ratio:4/5;border-radius:160px 160px 14px 14px;overflow:hidden;border:1px solid rgba(212,175,101,.55);background:linear-gradient(160deg,#3b2a15,var(--preto));box-shadow:0 30px 60px rgba(0,0,0,.55)}
+.frame img{width:100%;height:100%;object-fit:cover;object-position:center top;filter:sepia(.3) contrast(1.05) brightness(.9)}
+.frame::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(16,14,11,.75))}
+.frame .fb{position:absolute;inset:0;display:none;place-items:center;color:var(--ouro);font-size:90px}
+.frame .tag{position:absolute;left:0;right:0;bottom:16px;z-index:2;text-align:center;font-style:italic;color:var(--bege);font-size:.95rem}
+.orbit{position:absolute;inset:-26px;border:1px dashed rgba(212,175,101,.3);border-radius:50%;animation:spin 50s linear infinite;pointer-events:none}
+.orbit::after{content:"";position:absolute;top:50%;right:-5px;width:10px;height:10px;border-radius:50%;background:var(--ouro)}
+.frame-wrap{position:relative;padding:26px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== BOTÃO ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:16px 34px;border:0;border-radius:12px;font-family:var(--sans);font-weight:700;font-size:.95rem;letter-spacing:.14em;color:var(--preto);background:var(--ouro);transition:transform .2s,box-shadow .2s,background .2s}
+.btn:hover:not(.off){transform:translateY(-2px);background:#e3c07a;box-shadow:0 12px 28px rgba(212,175,101,.3)}
+.btn:active:not(.off){transform:scale(.98)}
+.btn.off{background:rgba(245,240,230,.12);color:rgba(245,240,230,.45);cursor:not-allowed}
+.btn .i{font-size:20px}
+
+/* ===== QUIZ ===== */
+.q-top{display:flex;justify-content:space-between;align-items:center;font-family:var(--sans);font-size:.82rem;color:var(--bege)}
+.dots{display:flex;gap:6px}
+.dots i{width:22px;height:4px;border-radius:2px;background:rgba(245,240,230,.15);transition:.4s}
+.dots i.done{background:var(--ouro)}
+.dots i.now{background:var(--branco)}
+.bar{height:6px;border-radius:99px;margin:14px 0 22px;background:rgba(245,240,230,.1);overflow:hidden}
+.bar span{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#9c7a33,var(--ouro),#f1d89b);transition:width .8s cubic-bezier(.3,.8,.3,1)}
+#qbox.out{opacity:0;transform:translateX(-24px);transition:.3s}
+#qbox.in{animation:slideIn .45s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.q-num{font-family:var(--sans);font-size:.82rem;letter-spacing:.2em;color:var(--ouro)}
+.q-text{margin:10px 0 26px;font-size:clamp(1.5rem,4.6vw,2.1rem);line-height:1.25;font-weight:600}
+.opts{display:grid;gap:12px}
+.opt{display:flex;align-items:center;gap:16px;width:100%;text-align:left;min-height:68px;padding:14px 18px;border-radius:14px;border:1px solid var(--line);background:rgba(245,240,230,.04);font-size:1.1rem;transition:.2s}
+.opt:hover:not(:disabled){border-color:rgba(212,175,101,.7);background:rgba(212,175,101,.07)}
+.opt .letter{flex:none;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-family:var(--sans);font-weight:700;border:1px solid var(--line);color:var(--bege);transition:.2s}
+.opt .mark{margin-left:auto;font-size:26px;display:none}
+.opt.sel{border:2px solid var(--ouro);background:rgba(212,175,101,.12)}
+.opt.sel .letter{background:var(--ouro);color:var(--preto);border-color:var(--ouro)}
+.opt:disabled{cursor:default}
+/* feedback de certo/errado */
+.opt.correct{border:2px solid var(--ok);background:var(--ok-bg)}
+.opt.correct .letter{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.correct .mark{display:block;color:var(--ok)}
+.opt.wrong{border:2px solid var(--err);background:var(--err-bg);animation:shake .4s}
+.opt.wrong .letter{background:var(--err);border-color:var(--err);color:#fff}
+.opt.wrong .mark{display:block;color:var(--err)}
+.opt.dim{opacity:.45}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fb-msg{display:none;align-items:center;gap:10px;margin-top:18px;padding:13px 16px;border-radius:12px;font-family:var(--sans);font-size:.95rem}
+.fb-msg .i{font-size:22px}
+.fb-msg.ok{display:flex;background:var(--ok-bg);color:#8be0b0;border:1px solid rgba(63,166,107,.5)}
+.fb-msg.bad{display:flex;background:var(--err-bg);color:#f3a29b;border:1px solid rgba(214,88,79,.5)}
+.actions{margin-top:24px;display:flex;flex-direction:column;align-items:center}
+.hint{min-height:1.4em;margin-top:12px;font-family:var(--sans);font-size:.88rem;color:#e7a66b;opacity:0;transition:opacity .3s}
+.hint.show{opacity:1}
+
+/* ===== RESULTADO ===== */
+#result{text-align:center}
+.trophy{font-size:64px;color:var(--ouro);display:inline-block;animation:pop .9s cubic-bezier(.3,1.6,.5,1)}
+.trophy .i{stroke-width:1.2}
+@keyframes pop{from{transform:scale(0) rotate(-25deg)}to{transform:none}}
+.verdict{margin-top:6px;font-size:1.2rem;color:var(--ouro);letter-spacing:.08em}
+.ring{position:relative;width:170px;height:170px;margin:18px auto}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:8}
+.ring .tr{stroke:rgba(245,240,230,.1)}
+.ring .pg{stroke:var(--ouro);stroke-linecap:round;stroke-dasharray:452;stroke-dashoffset:452;transition:stroke-dashoffset 1.4s cubic-bezier(.3,.8,.3,1)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:2.6rem;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 22px}
+.stat{padding:14px 6px;border-radius:12px;border:1px solid var(--line);background:rgba(245,240,230,.04)}
+.stat b{display:block;font-size:1.7rem}
+.stat.g b{color:var(--ok)} .stat.r b{color:var(--err)}
+.stat small{font-family:var(--sans);color:var(--bege);font-size:.78rem}
+.msg{max-width:46ch;margin:0 auto 26px;line-height:1.6;color:var(--bege);font-size:1.1rem}
+#confetti{position:fixed;inset:0;z-index:20;pointer-events:none}
+footer{position:relative;z-index:5;text-align:center;padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));font-family:var(--sans);font-size:.78rem;color:rgba(232,216,181,.55)}
+
+/* ===== RESPONSIVO ===== */
+@media(max-width:780px){
+  .hero{grid-template-columns:1fr;gap:20px;text-align:center}
+  .hero .copy{order:2;display:flex;flex-direction:column;align-items:center}
+  .frame-wrap{order:1;padding:18px}
+  .frame{width:min(70%,230px)}
+  .sub,.lead{max-width:none}
+}
+@media(max-width:560px){
+  .card{padding:24px 16px}
+  .btn{width:100%}
+  .opt{padding:13px 12px;font-size:1.02rem}
+  .brand span{display:none}
+  .bg .a,.bg .b{width:70%}
+  .formula{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- Ícones SVG monocromáticos (herdam a cor do texto) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-apple" viewBox="0 0 24 24"><path d="M12 8c-2-2-6-1.5-7 2s1 8 4 9.5c1.3.6 2 .2 3 .2s1.7.4 3-.2c3-1.5 5-6 4-9.5s-5-4-7-2z"/><path d="M12 8c0-2 .8-3.5 2.5-4.5"/><path d="M14.5 3.5c1.5 0 2.5.8 3 2-1.5.3-2.7-.2-3-2z"/></symbol>
+  <symbol id="i-atom" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/><circle cx="12" cy="12" r="1.3"/></symbol>
+  <symbol id="i-planet" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M3 15c-1-2 3-5.500 9-7.500s10-2 9 0M21 9c1 2-3 5.500-9 7.500"/></symbol>
+  <symbol id="i-on" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.500 6.500a8 8 0 0 1 0 11"/></symbol>
+  <symbol id="i-off" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M7.500 12.500l3 3 6-7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8.500 8.500l7 7M15.500 8.500l-7 7"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5v1.500A3 3 0 0 0 8 10.500M16 6h3v1.500a3 3 0 0 1-3 3M12 13v4M10 17h4v3h-4zM8 20h8"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+</svg>
+
+<div class="bg"><img class="a" id="bg1" alt=""><img class="b" id="bg2" alt=""><img class="c" id="bg3" alt=""></div>
+<canvas id="stars"></canvas>
+<span class="formula f1">F = G · m₁m₂ / r²</span>
+<span class="formula f2">F = m · a</span>
+
+<header class="top">
+  <div class="brand"><svg class="i"><use href="#i-apple"/></svg><span>Desafio Isaac Newton</span></div>
+  <button class="sound" id="soundBtn" aria-label="Ligar ou desligar sons"><svg class="i" id="soundIcon"><use href="#i-on"/></svg><span id="soundTxt">Som ligado</span></button>
+</header>
+
+<main>
+  <!-- INÍCIO -->
+  <section class="screen active" id="start">
+    <div class="panel hero">
+      <div class="copy">
+        <span class="seal"><svg class="i"><use href="#i-atom"/></svg>GINCANA DO CONHECIMENTO</span>
+        <h1>DESAFIO <span>ISAAC NEWTON</span></h1>
+        <p class="sub">Teste seus conhecimentos sobre um dos maiores cientistas da história.</p>
+        <p class="lead">Prepare-se para uma jornada pelo universo da física e das descobertas científicas.</p>
+        <button class="btn" id="startBtn">INICIAR DESAFIO<svg class="i"><use href="#i-arrow"/></svg></button>
+      </div>
+      <div class="frame-wrap">
+        <div class="orbit"></div>
+        <div class="frame">
+          <img id="portraitImg" alt="Retrato de Isaac Newton">
+          <div class="fb" id="fallback"><svg class="i" style="width:1em;height:1em"><use href="#i-apple"/></svg></div>
+          <span class="tag">Sir Isaac Newton, 1643–1727</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERGUNTAS -->
+  <section class="screen" id="quiz">
+    <div class="card">
+      <div class="q-top"><span id="counter">0/8 respondidas</span><div class="dots" id="dots" aria-hidden="true"></div></div>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="8" id="barWrap"><span id="barFill"></span></div>
+      <div id="qbox">
+        <div class="q-num" id="qnum"></div>
+        <h2 class="q-text" id="qtext"></h2>
+        <div class="opts" id="opts"></div>
+        <div class="fb-msg" id="fb" role="status"></div>
+      </div>
+      <div class="actions">
+        <button class="btn off" id="confirmBtn">CONFIRMAR RESPOSTA</button>
+        <div class="hint" id="hint" role="status">Selecione uma alternativa antes de continuar.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section class="screen" id="result">
+    <div class="card">
+      <div class="trophy"><svg class="i" id="trophyIcon"><use href="#i-trophy"/></svg></div>
+      <div class="verdict" id="verdict"></div>
+      <div class="ring"><svg viewBox="0 0 160 160"><circle class="tr" cx="80" cy="80" r="72"/><circle class="pg" id="pg" cx="80" cy="80" r="72"/></svg><b id="pct">0%</b></div>
+      <div class="stats">
+        <div class="stat g"><b id="rOk">0</b><small>Acertos</small></div>
+        <div class="stat r"><b id="rBad">0</b><small>Erros</small></div>
+        <div class="stat"><b id="rTot">8</b><small>Perguntas</small></div>
+      </div>
+      <p class="msg" id="msg"></p>
+      <button class="btn" id="restartBtn">VOLTAR AO INÍCIO</button>
+    </div>
+  </section>
+</main>
+
+<footer>Desafio Isaac Newton — Gincana do Conhecimento</footer>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ===== DADOS ===== */
+const QUESTIONS = [
+  {q:"Quem foi Isaac Newton?", o:["Um pintor.","Um físico e matemático.","Um escritor."], c:1},
+  {q:"Qual lei Newton descobriu?", o:["Lei da Gravidade.","Lei da Evolução.","Lei da Eletricidade."], c:0},
+  {q:"O que inspirou Newton a estudar a gravidade?", o:["Uma maçã caindo.","Uma estrela.","A Lua."], c:0},
+  {q:"Quantas leis do movimento Newton criou?", o:["Duas.","Três.","Cinco."], c:1},
+  {q:"O que a gravidade faz?", o:["Atrai os corpos.","Faz o Sol apagar.","Impede o movimento."], c:0},
+  {q:"Qual era a nacionalidade de Newton?", o:["Brasileira.","Francesa.","Inglesa."], c:2},
+  {q:"Em qual área Newton se destacou?", o:["Física e Matemática.","Música.","Literatura."], c:0},
+  {q:"Qual livro famoso Newton publicou?", o:["Principia Mathematica.","Dom Quixote.","A República."], c:0}
+];
+const TOTAL = QUESTIONS.length, LETTERS = ["A","B","C"];
+const IMG = f => "https://commons.wikimedia.org/wiki/Special:FilePath/" + f + "?width=700";
+const P = [IMG("Portrait_of_Sir_Isaac_Newton%2C_1689.jpg"), IMG("Portrait_of_Sir_Isaac_Newton_by_Enoch_Seeman%2C_c._1726.jpg"), IMG("Isaacnewton.png")];
+const icon = id => '<svg class="i"><use href="#' + id + '"/></svg>';
+
+/* ===== ESTADO ===== */
+let current = 0, answers = [], selected = null, revealed = false;
+const $ = id => document.getElementById(id);
+
+/* ===== IMAGENS COM FALLBACK ===== */
+function loadImg(el, list, fail){
+  let i = 0;
+  el.onerror = () => { i++; i < list.length ? el.src = list[i] : fail(); };
+  el.src = list[0];
+}
+loadImg($("portraitImg"), [P[2], P[0], P[1]], () => { $("portraitImg").style.display = "none"; $("fallback").style.display = "grid"; });
+loadImg($("bg1"), [P[0], P[2], P[1]], () => $("bg1").remove());
+loadImg($("bg2"), [P[1], P[0], P[2]], () => $("bg2").remove());
+loadImg($("bg3"), [P[2], P[1], P[0]], () => $("bg3").remove());
+
+/* ===== SOM ===== */
+let soundOn = true, actx = null;
+function tone(f, d = .15, t = "sine", v = .05, delay = 0){
+  if(!soundOn) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const s = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
+    o.type = t; o.frequency.value = f;
+    g.gain.setValueAtTime(v, s); g.gain.exponentialRampToValueAtTime(.0001, s + d);
+    o.connect(g); g.connect(actx.destination); o.start(s); o.stop(s + d);
+  }catch(e){}
+}
+$("soundBtn").onclick = () => {
+  soundOn = !soundOn;
+  $("soundTxt").textContent = soundOn ? "Som ligado" : "Som desligado";
+  $("soundIcon").innerHTML = '<use href="#' + (soundOn ? "i-on" : "i-off") + '"/>';
+  tone(660, .1);
+};
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+/* ===== QUIZ ===== */
+function updateProgress(){
+  const done = answers.length;
+  $("barFill").style.width = (done / TOTAL * 100) + "%";
+  $("barWrap").setAttribute("aria-valuenow", done);
+  $("counter").textContent = done + "/" + TOTAL + " respondidas";
+  [...$("dots").children].forEach((d, i) => d.className = i < done ? "done" : (i === current ? "now" : ""));
+}
+function setBtn(label, off){
+  $("confirmBtn").innerHTML = label;
+  $("confirmBtn").classList.toggle("off", off);
+}
+function renderQuestion(animate){
+  const q = QUESTIONS[current];
+  selected = null; revealed = false;
+  $("qnum").textContent = "PERGUNTA " + String(current + 1).padStart(2, "0") + " DE " + String(TOTAL).padStart(2, "0");
+  $("qtext").textContent = q.q;
+  $("opts").innerHTML = ""; $("fb").className = "fb-msg"; $("fb").innerHTML = "";
+  q.o.forEach((t, i) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.type = "button";
+    b.innerHTML = '<span class="letter">' + LETTERS[i] + '</span><span>' + t + '</span><span class="mark"></span>';
+    b.onclick = () => selectOption(i);
+    $("opts").appendChild(b);
+  });
+  setBtn("CONFIRMAR RESPOSTA", true); hideHint(); updateProgress();
+  if(animate){ $("qbox").classList.remove("in"); void $("qbox").offsetWidth; $("qbox").classList.add("in"); }
+}
+function selectOption(i){
+  if(revealed) return;
+  selected = i;
+  [...$("opts").children].forEach((el, k) => el.classList.toggle("sel", k === i));
+  setBtn("CONFIRMAR RESPOSTA", false); hideHint(); tone(520, .1, "triangle");
+}
+function hideHint(){ $("hint").classList.remove("show"); }
+
+/* Confirma e revela certo/errado na hora */
+function reveal(){
+  const q = QUESTIONS[current], right = selected === q.c;
+  revealed = true; answers.push(selected);
+  [...$("opts").children].forEach((el, k) => {
+    el.disabled = true; el.classList.remove("sel");
+    if(k === q.c){ el.classList.add("correct"); el.querySelector(".mark").innerHTML = icon("i-check"); }
+    else if(k === selected){ el.classList.add("wrong"); el.querySelector(".mark").innerHTML = icon("i-x"); }
+    else el.classList.add("dim");
+  });
+  const fb = $("fb");
+  fb.className = "fb-msg " + (right ? "ok" : "bad");
+  fb.innerHTML = right ? icon("i-check") + "<span>Resposta correta!</span>"
+    : icon("i-x") + "<span>Resposta incorreta. A correta é a alternativa " + LETTERS[q.c] + ".</span>";
+  right ? (tone(660, .12), tone(880, .2, "sine", .05, .1)) : tone(190, .3, "sawtooth", .03);
+  updateProgress();
+  setBtn(current === TOTAL - 1 ? "VER RESULTADO" + icon("i-arrow") : "PRÓXIMA PERGUNTA" + icon("i-arrow"), false);
+}
+function next(){
+  if(answers.length === TOTAL){ showResult(); return; }
+  $("qbox").classList.add("out");
+  setTimeout(() => { $("qbox").classList.remove("out"); current++; renderQuestion(true); }, 300);
+}
+$("confirmBtn").onclick = () => {
+  if(revealed){ next(); return; }
+  if(selected === null){
+    $("hint").classList.add("show"); tone(200, .2, "sawtooth", .03); return;
+  }
+  reveal();
+};
+
+/* ===== RESULTADO ===== */
+function showResult(){
+  const ok = answers.filter((a, i) => a === QUESTIONS[i].c).length, pct = Math.round(ok / TOTAL * 100);
+  let v, m;
+  if(ok === 8){ v = "Gênio da ciência"; m = "INCRÍVEL! Você é um verdadeiro gênio da ciência! Isaac Newton ficaria impressionado com seu conhecimento!"; }
+  else if(ok >= 6){ v = "Excelente desempenho"; m = "PARABÉNS! Você mandou muito bem! Seu conhecimento sobre Isaac Newton está excelente!"; }
+  else if(ok >= 4){ v = "No caminho certo"; m = "MUITO BOM! Você está no caminho certo! Continue explorando o universo da ciência!"; }
+  else { v = "Continue curioso"; m = "Não desanime! Todo grande conhecimento começa com a curiosidade. Continue aprendendo e tente novamente!"; }
+  $("verdict").textContent = v; $("msg").textContent = m;
+  $("rOk").textContent = ok; $("rBad").textContent = TOTAL - ok;
+  show("result");
+  setTimeout(() => { $("pg").style.strokeDashoffset = 452 * (1 - pct / 100); }, 80);
+  let n = 0; const step = Math.max(1, Math.round(pct / 30));
+  const iv = setInterval(() => { n = Math.min(pct, n + step); $("pct").textContent = n + "%"; if(n >= pct) clearInterval(iv); }, 40);
+  if(ok >= 6){ confetti(ok === 8 ? 160 : 90); [523, 659, 784, 1047].forEach((f, i) => tone(f, .25, "triangle", .06, i * .13)); }
+  else tone(440, .3);
+}
+
+/* ===== REINICIAR ===== */
+function restart(){
+  answers = []; current = 0; selected = null; revealed = false;
+  $("barFill").style.width = "0%"; $("pct").textContent = "0%"; $("pg").style.strokeDashoffset = 452;
+  stopConfetti(); renderQuestion(false); show("start"); tone(440, .12);
+}
+$("restartBtn").onclick = restart;
+$("startBtn").onclick = () => {
+  tone(660, .12); tone(880, .18, "sine", .05, .1);
+  show("quiz"); renderQuestion(true);
+};
+
+/* ===== ESTRELAS ===== */
+const sc = $("stars"), sx = sc.getContext("2d"); let stars = [];
+function sizeStars(){
+  sc.width = innerWidth; sc.height = innerHeight;
+  stars = Array.from({length: Math.min(90, Math.floor(innerWidth / 14))}, () => ({
+    x: Math.random() * sc.width, y: Math.random() * sc.height, r: Math.random() * 1.3 + .3,
+    v: Math.random() * .2 + .04, p: Math.random() * 6.28
+  }));
+}
+function drawStars(t){
+  sx.clearRect(0, 0, sc.width, sc.height); sx.fillStyle = "#F5F0E6";
+  stars.forEach(s => {
+    s.y -= s.v; if(s.y < -5){ s.y = sc.height + 5; s.x = Math.random() * sc.width; }
+    sx.globalAlpha = .15 + .45 * Math.abs(Math.sin(t / 1100 + s.p));
+    sx.beginPath(); sx.arc(s.x, s.y, s.r, 0, 6.28); sx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+addEventListener("resize", sizeStars); sizeStars(); requestAnimationFrame(drawStars);
+
+/* ===== CONFETE DOURADO ===== */
+const cc = $("confetti"), cx = cc.getContext("2d"); let bits = [], raf = null;
+function confetti(n){
+  cc.width = innerWidth; cc.height = innerHeight;
+  const cols = ["#D4AF65", "#E8D8B5", "#F5F0E6", "#f0d38c", "#a8812f"];
+  bits = Array.from({length: n}, () => ({
+    x: Math.random() * cc.width, y: -20 - Math.random() * cc.height * .5, w: 6 + Math.random() * 7, h: 4 + Math.random() * 6,
+    vy: 2 + Math.random() * 3.5, vx: -1.2 + Math.random() * 2.4, a: Math.random() * 6.28, va: -.2 + Math.random() * .4,
+    c: cols[Math.floor(Math.random() * cols.length)]
+  }));
+  cancelAnimationFrame(raf); loop();
+}
+function loop(){
+  cx.clearRect(0, 0, cc.width, cc.height);
+  bits.forEach(b => { b.x += b.vx; b.y += b.vy; b.a += b.va; cx.save(); cx.translate(b.x, b.y); cx.rotate(b.a); cx.fillStyle = b.c; cx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); cx.restore(); });
+  bits = bits.filter(b => b.y < cc.height + 20);
+  if(bits.length) raf = requestAnimationFrame(loop); else cx.clearRect(0, 0, cc.width, cc.height);
+}
+function stopConfetti(){ bits = []; cancelAnimationFrame(raf); cx.clearRect(0, 0, cc.width, cc.height); }
+
+/* ===== INÍCIO ===== */
+$("dots").innerHTML = QUESTIONS.map(() => "<i></i>").join("");
+renderQuestion(false);
+</script>
+</body>
+</html>
